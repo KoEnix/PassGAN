@@ -54,7 +54,7 @@ def parse_args():
     
     parser.add_argument('--seq-length', '-l',
                         type=int,
-                        default=10,
+                        default=24,
                         dest='seq_length',
                         help='The maximum password length. Use the same value that you did for training. (default: 10)')
     
