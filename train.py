@@ -93,7 +93,7 @@ with open(os.path.join(args.output_dir, 'charmap_inv.pickle'), 'wb') as f:
     
 print("Number of unique characters in dataset: {}".format(len(charmap)))
 
-real_inputs_discrete = tf.placeholder(tf.int32, shape=[args.batch_size, args.seq_length])
+real_inputs_discrete = tf.compat.v1.placeholder(tf.int32, shape=[args.batch_size, args.seq_length])
 real_inputs = tf.one_hot(real_inputs_discrete, len(charmap))
 
 fake_inputs = models.Generator(args.batch_size, args.seq_length, args.layer_dim, len(charmap))
@@ -106,7 +106,7 @@ disc_cost = tf.reduce_mean(disc_fake) - tf.reduce_mean(disc_real)
 gen_cost = -tf.reduce_mean(disc_fake)
 
 # WGAN lipschitz-penalty
-alpha = tf.random_uniform(
+alpha = tf.random.uniform(
     shape=[args.batch_size,1,1],
     minval=0.,
     maxval=1.
@@ -122,8 +122,8 @@ disc_cost += args.lamb * gradient_penalty
 gen_params = lib.params_with_name('Generator')
 disc_params = lib.params_with_name('Discriminator')
 
-gen_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
-disc_train_op = tf.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
+gen_train_op = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(gen_cost, var_list=gen_params)
+disc_train_op = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4, beta1=0.5, beta2=0.9).minimize(disc_cost, var_list=disc_params)
 
 # Dataset iterator
 def inf_train_gen():
@@ -146,7 +146,7 @@ true_char_ngram_lms = [utils.NgramLanguageModel(i+1, lines, tokenize=False) for 
 
 
 # TensorFlow Session
-with tf.Session() as session:
+with tf.compat.v1.Session() as session:
 
     # Time stamp
     localtime = time.asctime( time.localtime(time.time()) )
@@ -154,7 +154,7 @@ with tf.Session() as session:
     print("Local current time :", localtime)
     
     # Start TensorFlow session...
-    session.run(tf.global_variables_initializer())
+    session.run(tf.compat.v1.global_variables_initializer())
 
     def generate_samples():
         samples = session.run(fake_inputs)
@@ -199,7 +199,7 @@ with tf.Session() as session:
                 lm = utils.NgramLanguageModel(i+1, samples, tokenize=False)
                 lib.plot.plot('js{}'.format(i+1), lm.js_with(true_char_ngram_lms[i]))
 
-            with open(os.path.join(args.output_dir, 'samples', 'samples_{}.txt').format(iteration), 'w') as f:
+            with open(os.path.join(args.output_dir, 'samples', 'samples_{}.txt').format(iteration), "w", encoding='utf-8') as f:
                 for s in samples:
                     s = "".join(s)
                     f.write(s + "\n")
